@@ -5,18 +5,18 @@ from models import *
 
 hubs = []
 
-def parse_nb_drones(line: str) -> int:
-    if not line.startswith("nb_drones:"):
-        raise ParseException("wrong nb_drones format: missing 'nb_drones:' prefix")
+def parse_nb_drones(line: str, line_num: int) -> int:
     remaining = line[len("nb_drones:"):].strip()
     if not remaining:
-        raise ParseException("wrong db_drones format: missing '<number>' suffix")
+        raise ParseException(f"line {line_num}: missing '<number>' suffix")
     try:
-        value = int(remaining)
+        nb_drones = int(remaining)
+        if nb_drones <= 0 :
+            raise ParseException(f"line {line_num}: negative nb_drones")
     except ValueError as v:
-        raise ParseException("wrong db_drones format: invalid value")
-    return value
-# unknown option prefix. Valid options: color=, max_drones=
+        raise ParseException(f"line {line_num}: invalid nb_drones value")
+    return nb_drones
+
 
 def parse_options(opts: str, normal_hub: bool):
     result = {}
@@ -99,7 +99,8 @@ def parser(file_name: str) -> None:
                 if start_hub is not None:
                     raise ParseException(f"line {line_num}: duplicate start_hub")
                 start_hub = parse_hub(line, line_num)
-                check_duplicate_name(start_hub.name, hubs, line_num)
+                if start_hub.name in hubs:
+                    raise ParseException(f"line {line_num}: duplicate start_hub name '{start_hub.name}'")
                 hubs[start_hub.name] = start_hub
 
             elif line.startswith("end_hub:"):
@@ -108,19 +109,17 @@ def parser(file_name: str) -> None:
                 if end_hub is not None:
                     raise ParseException(f"line {line_num}: duplicate end_hub")
                 end_hub = parse_hub(line, line_num)
-                check_duplicate_name(end_hub.name, hubs, line_num)
+                if start_hub.name in hubs:
+                    raise ParseException(f"line {line_num}: duplicate end_hub name '{start_hub.name}'")
                 hubs[end_hub.name] = end_hub
 
             elif line.startswith("hub:"):
                 if nb_drones is None:
                     raise ParseException(f"line {line_num}: nb_drones must come first")
                 hub = parse_hub(line, line_num)
-                check_duplicate_name(hub.name, hubs, line_num)
+                if start_hub.name in hubs:
+                    raise ParseException(f"line {line_num}: duplicate hub name '{start_hub.name}'")
                 hubs[hub.name] = hub
-
-            # elif line.startswith("connection:"):
-            #     conn = parse_connection(line, hubs, line_num)
-            #     connections.append(conn)
 
             else:
                 raise ParseException(f"line {line_num}: unrecognized line format")
@@ -131,18 +130,6 @@ def parser(file_name: str) -> None:
         raise ParseException("missing start_hub")
     if end_hub is None:
         raise ParseException("missing end_hub")
-
-
-def check_duplicate_name(name: str, hubs: dict[str, "Hub"], line_num: int) -> None:
-    """Raise if hub name already exists."""
-    if name in hubs:
-        raise ParseException(f"line {line_num}: duplicate hub name '{name}'")
-                
-            #     hub = 
-                    
-            # elif line.startswith("hub"):
-            #     parse_hub(line, True)
-            # parse_hub(line, False)
 
 
 parser("./../maps/medium/01_dead_end_trap.txt")
