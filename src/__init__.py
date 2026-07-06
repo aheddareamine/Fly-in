@@ -1,1 +1,1 @@
-all = ["Zone", "ParserException"]
+__all__ = ["Zone", "ParserException"]
