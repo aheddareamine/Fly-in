@@ -22,8 +22,8 @@ class Parser:
         """Read the file, validate it, and return a Graph."""
         with open(self.file_name, 'r') as f:
             for line_num, raw_line in enumerate(f, start=1):
-                line = raw_line.strip()
-                if not line or line.startswith("#"):
+                line = raw_line.split("#", 1)[0].strip()
+                if not line:
                     continue
                 self._dispatch_line(line, line_num)
 

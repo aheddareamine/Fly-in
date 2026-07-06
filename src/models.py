@@ -42,13 +42,6 @@ class Connection:
     hub_b: str
     max_link_capacity: int = 1
 
-    def __post_init__(self) -> None:
-        """Normalize hub order for duplicate detection."""
-        if self.hub_a > self.hub_b:
-            self.hub_a, self.hub_b = (
-                self.hub_b, self.hub_a
-            )
-
 
 @dataclass
 class Graph:
